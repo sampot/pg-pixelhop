@@ -1,0 +1,305 @@
+:root {
+  color-scheme: dark;
+  --bg: #0e0c1a;
+  --panel: #1a1530;
+  --text: #f5f1ea;
+  --muted: #a89cb8;
+  --line: #2c2548;
+  --accent: #fb923c;
+  --accent-2: #38bdf8;
+  --on-accent: #19132e;
+  --accent-soft: color-mix(in oklab, var(--accent) 16%, var(--panel));
+  --neon: #f5c518;
+  --pixel: "Press Start 2P", "VT323", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.ambiance {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(900px 520px at 80% -5%, color-mix(in oklab, var(--accent) 20%, transparent), transparent 58%),
+    radial-gradient(700px 420px at 5% 100%, color-mix(in oklab, var(--accent-2) 14%, transparent), transparent 50%),
+    radial-gradient(1200px 800px at 50% 40%, transparent 40%, color-mix(in oklab, #000 30%, transparent)),
+    var(--bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: -apple-system, "Avenir Next", "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+  color: var(--text);
+}
+
+main {
+  width: min(100%, 64rem);
+  margin: 0 auto;
+  padding: 0.85rem 0.6rem max(1rem, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.hero {
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.hero h1 {
+  margin: 0.15rem 0 0;
+  font-family: var(--pixel);
+  font-size: clamp(1.4rem, 5vw, 1.9rem);
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tagline {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.meter {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.45rem 0.6rem;
+  padding: 0.6rem 0.7rem;
+  background: color-mix(in oklab, var(--panel) 94%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px color-mix(in oklab, #000 6%, transparent);
+}
+
+.meter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.meter-item .label {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.meter-item strong {
+  font-size: 0.95rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stage-wrap {
+  position: relative;
+  width: 100%;
+  /* 視口 18×13 TILE (64px) → 1152×832；手機等比縮放；canvas 內部依 CSS 大小調整解析度 */
+  aspect-ratio: 18 / 13;
+  background: #1a1530;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  overflow: hidden;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.4);
+}
+
+#stage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  cursor: pointer;
+}
+
+.touch-pad {
+  position: absolute;
+  bottom: 0.6rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.8rem;
+  pointer-events: none;
+}
+
+.touch-btn {
+  pointer-events: auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--panel) 70%, transparent);
+  border: 1px solid var(--line);
+  color: var(--accent);
+  font-size: 1.4rem;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  box-shadow: 0 4px 0 color-mix(in oklab, #000 30%, transparent);
+}
+
+.touch-jump {
+  background: color-mix(in oklab, var(--accent) 70%, transparent);
+  color: var(--on-accent);
+}
+
+.touch-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 transparent;
+}
+
+.status {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  padding: 0.6rem 0.8rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  min-height: 2.4rem;
+  font-size: 0.92rem;
+}
+
+.status[data-tone="win"] {
+  background: color-mix(in oklab, var(--neon) 26%, var(--panel));
+}
+
+.status[data-tone="warn"] {
+  background: color-mix(in oklab, #f59e0b 18%, var(--panel));
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.controls button {
+  flex: 1 1 calc(50% - 0.45rem);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+button {
+  font: inherit;
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 92%, #fff), var(--accent));
+  color: var(--on-accent);
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 4px 0 color-mix(in oklab, var(--accent) 55%, #000);
+}
+
+button.secondary {
+  background: var(--accent-soft);
+  color: var(--text);
+  border-color: var(--line);
+  box-shadow: none;
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(1.04);
+}
+button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.level-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.level-row select {
+  flex: 1 1 auto;
+  font: inherit;
+  padding: 0.45rem 0.6rem;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  min-height: 44px;
+}
+
+.level-row .muted {
+  font-size: 0.85rem;
+}
+
+.rules {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.rules summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.rules ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.15rem;
+}
+
+.attribution {
+  margin: 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+@media (min-width: 38rem) {
+  main {
+    padding: 1.1rem 1rem max(1.25rem, env(safe-area-inset-bottom));
+  }
+  .meter {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .controls button {
+    flex: 1 1 0;
+  }
+  .touch-pad {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .touch-btn,
+  button {
+    transition: none;
+  }
+}
