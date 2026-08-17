@@ -17,7 +17,7 @@
       <header class="hero">
         <p class="eyebrow">像素躍階 · Pixel Hop</p>
         <h1>像素躍階</h1>
-        <p class="tagline">←→ 移動 · 跳鍵／點畫面跳 · 過關撐旗</p>
+        <p class="tagline">←→ 移動 · 跳躍 · 過關撐旗</p>
       </header>
 
       <section class="meter" aria-label="對局狀態">
@@ -41,10 +41,13 @@
 
       <div class="stage-wrap">
         <canvas id="stage" aria-label="遊戲畫布"></canvas>
-        <div id="touch-pad" class="touch-pad" aria-hidden="true">
-          <button type="button" id="t-left" class="touch-btn">◀</button>
-          <button type="button" id="t-jump" class="touch-btn touch-jump">▲</button>
-          <button type="button" id="t-right" class="touch-btn">▶</button>
+        <div id="touch-pad" class="touch-pad" aria-label="觸控操作">
+          <div id="touch-move" class="touch-move" data-direction="neutral" aria-label="按住後向左或向右拖曳移動">
+            <span class="move-label move-left" aria-hidden="true">◀</span>
+            <span class="move-thumb" aria-hidden="true"></span>
+            <span class="move-label move-right" aria-hidden="true">▶</span>
+          </div>
+          <button type="button" id="t-jump" class="touch-jump" aria-label="跳躍" aria-pressed="false">跳</button>
         </div>
       </div>
 
@@ -72,8 +75,8 @@
       <details class="rules">
         <summary>規則</summary>
         <ul>
-          <li>←→ / A D 移動；↑ / W / 空白鍵 / 點畫面跳；Shift 衝刺。</li>
-          <li>行動裝置螢幕下方的 ◀▲▶ 即可操作；也可直接點畫面（左右 1/3 移動、中間跳）。</li>
+          <li>鍵盤：←→ / A D 移動；↑ / W / 空白鍵跳；Shift 衝刺。</li>
+          <li>手機：按住左下寬區後左右拖曳移動；按右下「跳」鍵跳躍。</li>
           <li>踩到尖刺 / 熔岩 / 敵人會扣命；命歸零即結束。</li>
           <li>踩扁敵人會反彈；跳到彈簧跳更高。</li>
           <li>收齊所有金幣是彩蛋（不影響過關）；走到出口旗下方即過關。</li>

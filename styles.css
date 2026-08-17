@@ -125,43 +125,99 @@ main {
   height: 100%;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
-  cursor: pointer;
 }
 
 .touch-pad {
   position: absolute;
-  bottom: 0.6rem;
+  bottom: max(0.55rem, env(safe-area-inset-bottom));
   left: 0;
   right: 0;
   display: flex;
-  justify-content: space-between;
-  padding: 0 0.8rem;
+  align-items: end;
+  gap: 0.7rem;
+  padding:
+    0 max(0.7rem, env(safe-area-inset-right))
+    0 max(0.7rem, env(safe-area-inset-left));
   pointer-events: none;
 }
 
-.touch-btn {
+.touch-move,
+.touch-jump {
   pointer-events: auto;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
   background: color-mix(in oklab, var(--panel) 70%, transparent);
   border: 1px solid var(--line);
   color: var(--accent);
-  font-size: 1.4rem;
-  font-weight: 800;
-  cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: manipulation;
   box-shadow: 0 4px 0 color-mix(in oklab, #000 30%, transparent);
 }
 
-.touch-jump {
-  background: color-mix(in oklab, var(--accent) 70%, transparent);
-  color: var(--on-accent);
+.touch-move {
+  position: relative;
+  flex: 1 1 auto;
+  height: 76px;
+  min-width: 0;
+  max-width: 26rem;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  touch-action: none;
 }
 
-.touch-btn:active {
+.move-label {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  font-size: 1.15rem;
+  opacity: 0.72;
+}
+
+.move-left {
+  left: 1rem;
+}
+
+.move-right {
+  right: 1rem;
+}
+
+.move-thumb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 46px;
+  height: 46px;
+  border: 2px solid color-mix(in oklab, var(--accent) 72%, white);
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--accent) 32%, var(--panel));
+  translate: -50% -50%;
+  transition: transform 80ms ease-out;
+}
+
+.touch-move[data-direction="left"] .move-thumb {
+  transform: translateX(-52px);
+}
+
+.touch-move[data-direction="right"] .move-thumb {
+  transform: translateX(52px);
+}
+
+.touch-jump {
+  flex: 0 0 76px;
+  width: 76px;
+  min-width: 72px;
+  height: 76px;
+  min-height: 72px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--accent) 70%, transparent);
+  color: var(--on-accent);
+  font-size: 1rem;
+  font-weight: 850;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.touch-move:active,
+.touch-jump:active,
+.touch-jump[aria-pressed="true"] {
   transform: translateY(2px);
   box-shadow: 0 0 0 transparent;
 }
@@ -292,13 +348,16 @@ button:disabled {
   .controls button {
     flex: 1 1 0;
   }
+}
+
+@media (hover: hover) and (pointer: fine) {
   .touch-pad {
     display: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .touch-btn,
+  .move-thumb,
   button {
     transition: none;
   }

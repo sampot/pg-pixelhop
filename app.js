@@ -1,13 +1,14 @@
 /**
  * pg-pixelhop 渲染＋輸入＋流程。
  *
- * 控制：←→ / A D 移動；↑ / W / Space / 點畫面跳；按住 Shift 衝刺；視窗外提供 on-screen 行動鍵。
+ * 控制：←→ / A D 移動；↑ / W / Space 跳；按住 Shift 衝刺；行動裝置提供拖曳移動區與跳躍鍵。
  * 條件式：行動裝置隱藏鍵盤提示。
  */
 
 import { parseLevel, newWorld, step, TILE, W_TILES, H_TILES, coinsRemaining, coinsTotal } from "./game.js";
 import { LEVELS, levelByIndex } from "./levels.js";
 import { PixelAudio } from "./audio.js";
+import { createTouchInput, reduceTouchInput } from "./input-controls.js";
 
 const audio = new PixelAudio();
 
@@ -73,8 +74,7 @@ const el = {
   btnNext: document.getElementById("btn-next"),
   btnReset: document.getElementById("btn-reset"),
   touch: document.getElementById("touch-pad"),
-  touchLeft: document.getElementById("t-left"),
-  touchRight: document.getElementById("t-right"),
+  touchMove: document.getElementById("touch-move"),
   touchJump: document.getElementById("t-jump"),
   bgm: document.getElementById("bgm"),
 };
@@ -100,6 +100,33 @@ const input = {
   jump: false,
   sprint: false,
 };
+const keyboardInput = {
+  left: false,
+  right: false,
+  jump: false,
+  sprint: false,
+};
+let touchInput = createTouchInput();
+
+function syncContinuousInput() {
+  input.left = keyboardInput.left || touchInput.moveX < 0;
+  input.right = keyboardInput.right || touchInput.moveX > 0;
+  input.jump = keyboardInput.jump || touchInput.jump;
+  input.sprint = keyboardInput.sprint;
+  el.touchMove.dataset.direction =
+    touchInput.moveX < 0 ? "left" : touchInput.moveX > 0 ? "right" : "neutral";
+  el.touchJump.setAttribute("aria-pressed", String(touchInput.jump));
+}
+
+function resetInput() {
+  keyboardInput.left = false;
+  keyboardInput.right = false;
+  keyboardInput.jump = false;
+  keyboardInput.sprint = false;
+  touchInput = reduceTouchInput(touchInput, { type: "reset" });
+  input.jumpDown = false;
+  syncContinuousInput();
+}
 
 /* 視口像素大小（依 canvas 解析度） */
 const VIEW_W = W_TILES * TILE;
@@ -182,63 +209,66 @@ function setStatus(msg, tone) {
   el.status.dataset.tone = tone || "";
 }
 
-/* 鍵盤 / 觸控 */
+/* 鍵盤 / Pointer Events */
 function wireInput() {
   window.addEventListener("keydown", (e) => {
     if (e.repeat) return;
     audio.unlock();
     if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
-      input.left = true;
+      keyboardInput.left = true;
     } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
-      input.right = true;
+      keyboardInput.right = true;
     } else if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " " || e.key === "Spacebar") {
+      keyboardInput.jump = true;
       input.jumpDown = true;
-      input.jump = true;
     } else if (e.key === "Shift") {
-      input.sprint = true;
+      keyboardInput.sprint = true;
     }
+    syncContinuousInput();
   });
   window.addEventListener("keyup", (e) => {
-    if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") input.left = false;
-    else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") input.right = false;
-    else if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " " || e.key === "Spacebar") input.jump = false;
-    else if (e.key === "Shift") input.sprint = false;
+    if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keyboardInput.left = false;
+    else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keyboardInput.right = false;
+    else if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " " || e.key === "Spacebar") keyboardInput.jump = false;
+    else if (e.key === "Shift") keyboardInput.sprint = false;
+    syncContinuousInput();
   });
 
-  // 行動裝置虛擬按鍵
-  const mkHold = (el, on) => {
-    const start = (e) => { e.preventDefault(); audio.unlock(); on(true); };
-    const end = (e) => { e.preventDefault(); on(false); };
-    el.addEventListener("touchstart", start, { passive: false });
-    el.addEventListener("touchend", end, { passive: false });
-    el.addEventListener("touchcancel", end, { passive: false });
-    el.addEventListener("mousedown", start);
-    el.addEventListener("mouseup", end);
-    el.addEventListener("mouseleave", end);
+  const updateTouch = (action) => {
+    const wasJumping = touchInput.jump;
+    touchInput = reduceTouchInput(touchInput, action);
+    if (!wasJumping && touchInput.jump) input.jumpDown = true;
+    syncContinuousInput();
   };
-  mkHold(el.touchLeft, (v) => (input.left = v));
-  mkHold(el.touchRight, (v) => (input.right = v));
-  mkHold(el.touchJump, (v) => {
-    if (v) input.jumpDown = true;
-    input.jump = v;
-  });
 
-  // 點畫面跳
-  el.canvas.addEventListener("pointerdown", (e) => {
+  el.touchMove.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
     audio.unlock();
-    const rect = el.canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    if (x < 0.4) input.left = true;
-    else if (x > 0.6) input.right = true;
-    else {
-      input.jumpDown = true;
-      input.jump = true;
-    }
-    setTimeout(() => {
-      input.left = false;
-      input.right = false;
-      input.jump = false;
-    }, 200);
+    updateTouch({ type: "move-start", pointerId: e.pointerId, clientX: e.clientX });
+    el.touchMove.setPointerCapture(e.pointerId);
+  });
+  el.touchMove.addEventListener("pointermove", (e) => {
+    updateTouch({ type: "move-drag", pointerId: e.pointerId, clientX: e.clientX });
+  });
+  const endMove = (e) => updateTouch({ type: "move-end", pointerId: e.pointerId });
+  el.touchMove.addEventListener("pointerup", endMove);
+  el.touchMove.addEventListener("pointercancel", endMove);
+  el.touchMove.addEventListener("lostpointercapture", endMove);
+
+  el.touchJump.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    audio.unlock();
+    updateTouch({ type: "jump-start", pointerId: e.pointerId });
+    el.touchJump.setPointerCapture(e.pointerId);
+  });
+  const endJump = (e) => updateTouch({ type: "jump-end", pointerId: e.pointerId });
+  el.touchJump.addEventListener("pointerup", endJump);
+  el.touchJump.addEventListener("pointercancel", endJump);
+  el.touchJump.addEventListener("lostpointercapture", endJump);
+
+  window.addEventListener("blur", resetInput);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) resetInput();
   });
 
   // 按鈕
